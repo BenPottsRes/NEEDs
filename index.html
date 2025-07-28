@@ -33,7 +33,7 @@
     let root, nodes, links;
 
     function update(depthLimit) {
-      d3.json("survey_mindmap.json").then(data => {
+      d3.json("/survey_mindmap.json").then(data => {
         root = d3.hierarchy(data, d => d.children);
         root.x0 = height / 2;
         root.y0 = 0;

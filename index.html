@@ -6,8 +6,8 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     body { font-family: sans-serif; }
-    h1 { text-align: center; }
-    #slider-container { margin: 1em; text-align: center; }
+    h1 { text-align: centre; }
+    #slider-container { margin: 1em; text-align: centre; }
     .node circle { fill: #69b3a2; stroke: #000; stroke-width: 1.5px; }
     .node text { font: 14px sans-serif; }
     .link { fill: none; stroke: #ccc; stroke-width: 1.5px; }
@@ -168,40 +168,54 @@
 
   <script>
     const svg = d3.select("svg"),
-          g   = svg.append("g").attr("transform","translate(40,0)"),
+          g   = svg.append("g").attr("transform", "translate(40,0)"),
           tree = d3.tree().size([600, 960 - 160]);
 
     function update(depthLimit) {
-      const raw = document.getElementById("mindmap-data").textContent,
+      // 1. Parse the inline JSON
+      const raw  = document.getElementById("mindmap-data").textContent,
             data = JSON.parse(raw),
             root = d3.hierarchy(data);
 
+      // 2. Compute the layout
+      tree(root);
+
+      // 3. Filter nodes and links by the selected depth
       const nodes = root.descendants().filter(d => d.depth <= depthLimit),
             links = root.links().filter(d => d.source.depth < depthLimit);
 
+      // 4. Clear any existing render
       svg.selectAll("*").remove();
+
+      // 5. Draw links
       g.selectAll(".link")
        .data(links)
        .enter().append("path")
-         .attr("class","link")
-         .attr("d", d3.linkHorizontal().x(d=>d.y).y(d=>d.x));
+         .attr("class", "link")
+         .attr("d", d3.linkHorizontal()
+                        .x(d => d.y)
+                        .y(d => d.x));
 
+      // 6. Draw nodes
       g.selectAll(".node")
        .data(nodes)
        .enter().append("g")
-         .attr("class","node")
-         .attr("transform", d=>`translate(${d.y},${d.x})`)
+         .attr("class", "node")
+         .attr("transform", d => `translate(${d.y},${d.x})`)
        .call(sel => {
-         sel.append("circle").attr("r",4.5);
+         sel.append("circle").attr("r", 4.5);
          sel.append("text")
-            .attr("dy",3)
-            .attr("x", d=>d.children ? -8 : 8)
-            .attr("text-anchor", d=>d.children ? "end" : "start")
-            .text(d=>d.data.name);
+            .attr("dy", 3)
+            .attr("x", d => d.children ? -8 : 8)
+            .attr("text-anchor", d => d.children ? "end" : "start")
+            .text(d => d.data.name);
        });
     }
 
-    document.getElementById("depthSlider").addEventListener("input", e => update(+e.target.value));
+    // 7. Bind slider and initialise
+    document.getElementById("depthSlider")
+            .addEventListener("input", e => update(+e.target.value));
+
     update(5);
   </script>
 </body>

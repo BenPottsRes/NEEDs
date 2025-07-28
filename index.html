@@ -5,24 +5,30 @@
   <title>Survey Mind Map</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
-    body { font-family: sans-serif; }
-    h1 { text-align: center; }
-    #slider-container { margin: 1em; text-align: center; }
-    .node circle { fill: #69b3a2; stroke: #000; stroke-width: 1.5px; }
-    .node text { font: 14px sans-serif; }
-    .link { fill: none; stroke: #ccc; stroke-width: 1.5px; }
-    svg { display: block; margin: auto; }
+    body { font-family: sans-serif; margin: 0; padding: 0; }
+    h1 { text-align: center; margin: 0.5em 0; }
+    #slider-container { text-align: center; margin-bottom: 0.5em; }
+    /* Smaller text for fitting longer labels */
+    .node text { font: 10px sans-serif; }
+    .node circle { fill: #69b3a2; stroke: #000; stroke-width: 1px; }
+    .link { fill: none; stroke: #ccc; stroke-width: 1px; }
+    /* Make SVG scrollable if too wide */
+    #svg-wrapper { overflow: auto; }
+    svg { display: block; }
   </style>
 </head>
 <body>
   <h1>Survey Mind Map</h1>
   <div id="slider-container">
     <label for="depthSlider">Show to level:</label>
-    <input type="range" id="depthSlider" min="1" max="5" value="5">
+    <input type="range" id="depthSlider" min="1" max="3" value="3">
   </div>
-  <svg width="1260" height="800"></svg>
+  <div id="svg-wrapper">
+    <!-- Adjust width/height as you like -->
+    <svg width="1200" height="600"></svg>
+  </div>
 
-  <!-- === Paste your raw JSON here; it MUST be valid JSON === -->
+  <!-- Inline JSON data -->
   <script id="mindmap-data" type="application/json">
 {
   "name": "Survey Organisation",
@@ -177,41 +183,45 @@
             data = JSON.parse(raw),
             root = d3.hierarchy(data);
 
-      // compute x/y
+      // Compute layout
       tree(root);
 
-      // filter by depth
+      // Filter by depth
       const nodes = root.descendants().filter(d => d.depth <= depthLimit),
             links = root.links().filter(d => d.source.depth < depthLimit);
 
-      // clear & redraw
+      // Clear and redraw
       svg.selectAll("*").remove();
-      const g = svg.append("g").attr("transform", "translate(40,0)");
+      const g = svg.append("g").attr("transform","translate(40,0)");
 
+      // Links
       g.selectAll(".link")
        .data(links)
        .enter().append("path")
-         .attr("class", "link")
-         .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
+         .attr("class","link")
+         .attr("d", d3.linkHorizontal().x(d=>d.y).y(d=>d.x));
 
+      // Nodes
       const nodeG = g.selectAll(".node")
                      .data(nodes)
                      .enter().append("g")
-                       .attr("class", "node")
-                       .attr("transform", d => `translate(${d.y},${d.x})`);
+                       .attr("class","node")
+                       .attr("transform",d=>`translate(${d.y},${d.x})`);
 
-      nodeG.append("circle").attr("r", 4.5);
+      nodeG.append("circle").attr("r",3.5);  // smaller circles
       nodeG.append("text")
-           .attr("dy", 3)
-           .attr("x", d => d.children ? -8 : 8)
-           .attr("text-anchor", d => d.children ? "end" : "start")
-           .text(d => d.data.name);
+           .attr("dy",3)
+           .attr("x",d=>d.children ? -6 : 6)
+           .attr("text-anchor",d=>d.children?"end":"start")
+           .text(d=>d.data.name);
     }
 
+    // Slider
     document.getElementById("depthSlider")
             .addEventListener("input", e => update(+e.target.value));
 
-    update(5);
+    // Initial draw at level 3
+    update(3);
   </script>
 </body>
 </html>

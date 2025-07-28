@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Survey Mind Map</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body { font-family: sans-serif; }
+    .node circle { fill: #69b3a2; stroke: #000; stroke-width: 1.5px; }
+    .node text { font: 14px sans-serif; }
+    .link { fill: none; stroke: #ccc; stroke-width: 1.5px; }
+    #slider-container { margin: 1em 0; }
+  </style>
+</head>
+<body>
+  <h1>Survey Mind Map</h1>
+  <div id="slider-container">
+    <label for="depthSlider">Show to level:</label>
+    <input type="range" id="depthSlider" min="1" max="5" value="5">
+  </div>
+  <svg width="960" height="600"></svg>
+
+  <script>
+    const width = 960;
+    const height = 600;
+
+    const svg = d3.select("svg"),
+          g = svg.append("g").attr("transform", "translate(40,0)");
+
+    const tree = d3.tree().size([height, width - 160]);
+
+    let root, nodes, links;
+
+    function update(depthLimit) {
+      d3.json("survey_mindmap.json").then(data => {
+        root = d3.hierarchy(data, d => d.children);
+        root.x0 = height / 2;
+        root.y0 = 0;
+
+        nodes = root.descendants().filter(d => d.depth <= depthLimit);
+        links = root.links().filter(d => d.source.depth < depthLimit);
+
+        svg.selectAll("*").remove();
+
+        const link = g.selectAll(".link")
+          .data(links)
+          .enter().append("path")
+          .attr("class", "link")
+          .attr("d", d3.linkHorizontal()
+            .x(function(d) { return d.y; })
+            .y(function(d) { return d.x; }));
+
+        const node = g.selectAll(".node")
+          .data(nodes)
+          .enter().append("g")
+          .attr("class", "node")
+          .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+        node.append("circle")
+          .attr("r", 4.5);
+
+        node.append("text")
+          .attr("dy", 3)
+          .attr("x", function(d) { return d.children ? -8 : 8; })
+          .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+          .text(function(d) { return d.data.name; });
+      });
+    }
+
+    document.getElementById("depthSlider").addEventListener("input", function () {
+      update(+this.value);
+    });
+
+    update(5);
+  </script>
+</body>
+</html>

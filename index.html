@@ -6,12 +6,12 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     body { font-family: sans-serif; }
-    h1 { text-align: centre; }           /* CSS only recognises 'center', but this only affects text alignment */
-    #slider-container { margin: 1em; text-align: centre; }
+    h1 { text-align: center; }
+    #slider-container { margin: 1em; text-align: center; }
     .node circle { fill: #69b3a2; stroke: #000; stroke-width: 1.5px; }
-    .node text   { font: 14px sans-serif; }
-    .link        { fill: none; stroke: #ccc; stroke-width: 1.5px; }
-    svg          { display: block; margin: auto; }
+    .node text { font: 14px sans-serif; }
+    .link { fill: none; stroke: #ccc; stroke-width: 1.5px; }
+    svg { display: block; margin: auto; }
   </style>
 </head>
 <body>
@@ -22,9 +22,148 @@
   </div>
   <svg width="960" height="600"></svg>
 
-  <!-- Inline JSON data -->
+  <!-- === Paste your raw JSON here; it MUST be valid JSON === -->
   <script id="mindmap-data" type="application/json">
-  { /* your full JSON tree here, as before */ }
+{
+  "name": "Survey Organisation",
+  "children": [
+    {
+      "name": "Demographics",
+      "children": [
+        { "name": "Age Range" },
+        { "name": "Ethnicity Group" },
+        { "name": "Gender Identity" },
+        { "name": "LGBTQ+" },
+        { "name": "Region of the UK" }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "children": [
+        {
+          "name": "Attendance",
+          "children": [
+            { "name": "Reason for this" },
+            { "name": "Previous attendance" },
+            { "name": "Method of attendance, e.g. ambulance" }
+          ]
+        },
+        {
+          "name": "Non-attendance",
+          "children": [
+            { "name": "Reason / Barriers" },
+            { "name": "Perceived Impact and Outcome" }
+          ]
+        },
+        {
+          "name": "Leaving without being seen",
+          "children": [
+            { "name": "Reason / Barriers" },
+            { "name": "Perceived Impact and Outcome" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Disclosure",
+      "children": [
+        {
+          "name": "Decision on whether to do so",
+          "children": [
+            { "name": "Factors that are involved" }
+          ]
+        },
+        {
+          "name": "Method of doing so",
+          "children": [
+            { "name": "Pre-disclosed (hospital passport, alert on patient records system)" },
+            { "name": "Self-advocacy" }
+          ]
+        },
+        {
+          "name": "Perceived impact of decision",
+          "children": [
+            { "name": "Better or worse due to disclosure" },
+            { "name": "Better or worse due to non-disclosure" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Experience",
+      "children": [
+        {
+          "name": "Rating of care and experience",
+          "children": [
+            { "name": "Scales and quantifying" }
+          ]
+        },
+        {
+          "name": "Barriers and Enablers",
+          "children": [
+            { "name": "Challenging aspects of the experience" },
+            { "name": "The aspects that help" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Key Barriers",
+      "children": [
+        {
+          "name": "Sensory and Environmental",
+          "children": [
+            { "name": "Noise, visual, smell, crowding, etc" },
+            { "name": "Disclosure impact" },
+            { "name": "Personal navigation strategies" }
+          ]
+        },
+        {
+          "name": "Structural and Procedural",
+          "children": [
+            { "name": "Logistics, waiting areas, waiting time, patient pathway, etc" },
+            { "name": "Disclosure impact" },
+            { "name": "Personal navigation strategies" }
+          ]
+        },
+        {
+          "name": "Communication with Staff",
+          "children": [
+            { "name": "Staff empathy, agreement with staff, feeling cared for and understood, etc" },
+            { "name": "Disclosure impact" },
+            { "name": "Personal navigation strategies" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pain",
+      "children": [
+        {
+          "name": "Relationship with pain",
+          "children": [
+            { "name": "Perception" },
+            { "name": "Tolerance" }
+          ]
+        },
+        {
+          "name": "Expressing and Communicating",
+          "children": [
+            { "name": "Staff empathy and understanding" },
+            { "name": "Disclosure impact" },
+            { "name": "Personal navigation strategies" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Final Comments",
+      "children": [
+        { "name": "Chance to say anything not covered" }
+      ]
+    }
+  ]
+}
   </script>
 
   <script>
@@ -34,44 +173,34 @@
           tree   = d3.tree().size([height, width - 160]);
 
     function update(depthLimit) {
-      // 1. Parse data
       const raw  = document.getElementById("mindmap-data").textContent,
             data = JSON.parse(raw),
             root = d3.hierarchy(data);
 
-      // 2. Compute layout (assigns x/y on each node)
+      // compute x/y
       tree(root);
 
-      // 3. Filter to desired depth
+      // filter by depth
       const nodes = root.descendants().filter(d => d.depth <= depthLimit),
             links = root.links().filter(d => d.source.depth < depthLimit);
 
-      // 4. Clear previous contents of the SVG
+      // clear & redraw
       svg.selectAll("*").remove();
+      const g = svg.append("g").attr("transform", "translate(40,0)");
 
-      // 5. Recreate the group we draw into
-      const g = svg.append("g")
-                   .attr("transform", "translate(40,0)");
-
-      // 6. Draw links
       g.selectAll(".link")
        .data(links)
        .enter().append("path")
          .attr("class", "link")
-         .attr("d", d3.linkHorizontal()
-                        .x(d => d.y)
-                        .y(d => d.x));
+         .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
 
-      // 7. Draw nodes
       const nodeG = g.selectAll(".node")
                      .data(nodes)
                      .enter().append("g")
                        .attr("class", "node")
                        .attr("transform", d => `translate(${d.y},${d.x})`);
 
-      nodeG.append("circle")
-           .attr("r", 4.5);
-
+      nodeG.append("circle").attr("r", 4.5);
       nodeG.append("text")
            .attr("dy", 3)
            .attr("x", d => d.children ? -8 : 8)
@@ -79,11 +208,9 @@
            .text(d => d.data.name);
     }
 
-    // Bind the slider
     document.getElementById("depthSlider")
             .addEventListener("input", e => update(+e.target.value));
 
-    // Initial render
     update(5);
   </script>
 </body>

@@ -1,162 +1,229 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Survey Mind Map</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { height: 100%; }
-    body { height: 100%; font-family: sans-serif; }
-    #slider-container {
-      position: absolute;
-      top: 1em;
-      right: 1em;
-      background: rgba(255,255,255,0.9);
-      padding: 0.5em;
-      border-radius: 4px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      z-index: 10;
-      font-size: 0.9rem;
-    }
-    #mindmap {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-    }
-    .markmap-dark { background: #27272a; color: #fff; }
+    body { font-family: sans-serif; }
+    h1 { text-align: center; margin: 0.5em 0; }
+    #slider-container { text-align: center; margin-bottom: 0.5em; }
+    #svg-wrapper { overflow-x: auto; }
+    svg { display: block; margin: auto; }
+    .node text { font: 10px sans-serif; }
+    .node circle { fill: #3b82f6; stroke: #1e3a8a; stroke-width: 1px; }
+    .link { fill: none; stroke: #94a3b8; stroke-width: 1px; }
   </style>
-  <!-- Markmap core -->
-  <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/browser/index.min.js"></script>
 </head>
 <body>
-  <!-- Depth slider -->
+
+  <h1>Survey Mind Map</h1>
   <div id="slider-container">
     <label for="depthSlider">Depth:</label>
     <input type="range" id="depthSlider" min="1" max="3" value="3">
   </div>
 
-  <svg id="mindmap"></svg>
+  <div id="svg-wrapper">
+    <svg width="1400" height="700"></svg>
+  </div>
+
+  <!-- Inline JSON data -->
+  <script id="mindmap-data" type="application/json">
+{
+  "name": "Survey Organisation",
+  "children": [
+    {
+      "name": "Demographics",
+      "children": [
+        { "name": "Age Range" },
+        { "name": "Ethnicity Group" },
+        { "name": "Gender Identity" },
+        { "name": "LGBTQ+" },
+        { "name": "Region of the UK" }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "children": [
+        {
+          "name": "Attendance",
+          "children": [
+            { "name": "Reason for this" },
+            { "name": "Previous attendance" },
+            { "name": "Method of attendance, e.g. ambulance" }
+          ]
+        },
+        {
+          "name": "Non-attendance",
+          "children": [
+            { "name": "Reason / Barriers" },
+            { "name": "Perceived Impact and Outcome" }
+          ]
+        },
+        {
+          "name": "Leaving without being seen",
+          "children": [
+            { "name": "Reason / Barriers" },
+            { "name": "Perceived Impact and Outcome" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Disclosure",
+      "children": [
+        {
+          "name": "Decision on whether to do so",
+          "children": [
+            { "name": "Factors that are involved" }
+          ]
+        },
+        {
+          "name": "Method of doing so",
+          "children": [
+            { "name": "Pre-disclosed (hospital passport, alert on patient records system)" },
+            { "name": "Self-advocacy" }
+          ]
+        },
+        {
+          "name": "Perceived impact of decision",
+          "children": [
+            { "name": "Better or worse due to disclosure" },
+            { "name": "Better or worse due to non-disclosure" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Experience",
+      "children": [
+        {
+          "name": "Rating of care and experience",
+          "children": [
+            { "name": "Scales and quantifying" }
+          ]
+        },
+        {
+          "name": "Barriers and Enablers",
+          "children": [
+            { "name": "Challenging aspects of the experience" },
+            { "name": "The aspects that help" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Key Barriers",
+      "children": [
+        {
+          "name": "Sensory and Environmental",
+          "children": [
+            { "name": "Noise, visual, smell, crowding, etc" },
+            { "name": "Disclosure impact" },
+            { "name": "Personal navigation strategies" }
+          ]
+        },
+        {
+          "name": "Structural and Procedural",
+          "children": [
+            { "name": "Logistics, waiting areas, waiting time, patient pathway, etc" },
+            { "name": "Disclosure impact" },
+            { "name": "Personal navigation strategies" }
+          ]
+        },
+        {
+          "name": "Communication with Staff",
+          "children": [
+            { "name": "Staff empathy, agreement with staff, feeling cared for and understood, etc" },
+            { "name": "Disclosure impact" },
+            { "name": "Personal navigation strategies" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pain",
+      "children": [
+        {
+          "name": "Relationship with pain",
+          "children": [
+            { "name": "Perception" },
+            { "name": "Tolerance" }
+          ]
+        },
+        {
+          "name": "Expressing and Communicating",
+          "children": [
+            { "name": "Staff empathy and understanding" },
+            { "name": "Disclosure impact" },
+            { "name": "Personal navigation strategies" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Final Comments",
+      "children": [
+        { "name": "Chance to say anything not covered" }
+      ]
+    }
+  ]
+}
+  </script>
 
   <script>
-  (function() {
-    const { markmap: mmLib } = window;
-    const { Markmap, deriveOptions } = mmLib;
+    const svg    = d3.select("svg"),
+          width  = +svg.attr("width"),
+          height = +svg.attr("height"),
+          tree   = d3.tree().size([height - 50, width - 200]);  // leave margins
 
-    // 1) Your tree data
-    const rawData = {
-      content: "Survey Organisation",
-      children: [
-        { content: "Demographics", children: [
-          { content: "Age Range" },
-          { content: "Ethnicity Group" },
-          { content: "Gender Identity" },
-          { content: "LGBTQ+" },
-          { content: "Region of the UK" }
-        ]},
-        { content: "Attendance", children: [
-          { content: "Attendance", children: [
-            { content: "Reason for this" },
-            { content: "Previous attendance" },
-            { content: "Method of attendance, e.g. ambulance" }
-          ]},
-          { content: "Non-attendance", children: [
-            { content: "Reason / Barriers" },
-            { content: "Perceived Impact and Outcome" }
-          ]},
-          { content: "Leaving without being seen", children: [
-            { content: "Reason / Barriers" },
-            { content: "Perceived Impact and Outcome" }
-          ]}
-        ]},
-        { content: "Disclosure", children: [
-          { content: "Decision on whether to do so", children: [
-            { content: "Factors that are involved" }
-          ]},
-          { content: "Method of doing so", children: [
-            { content: "Pre-disclosed (hospital passport, alert on patient records system)" },
-            { content: "Self-advocacy" }
-          ]},
-          { content: "Perceived impact of decision", children: [
-            { content: "Better or worse due to disclosure" },
-            { content: "Better or worse due to non-disclosure" }
-          ]}
-        ]},
-        { content: "Experience", children: [
-          { content: "Rating of care and experience", children: [
-            { content: "Scales and quantifying" }
-          ]},
-          { content: "Barriers and Enablers", children: [
-            { content: "Challenging aspects of the experience" },
-            { content: "The aspects that help" }
-          ]}
-        ]},
-        { content: "Key Barriers", children: [
-          { content: "Sensory and Environmental", children: [
-            { content: "Noise, visual, smell, crowding, etc" },
-            { content: "Disclosure impact" },
-            { content: "Personal navigation strategies" }
-          ]},
-          { content: "Structural and Procedural", children: [
-            { content: "Logistics, waiting areas, waiting time, patient pathway, etc" },
-            { content: "Disclosure impact" },
-            { content: "Personal navigation strategies" }
-          ]},
-          { content: "Communication with Staff", children: [
-            { content: "Staff empathy, agreement with staff, feeling cared for and understood, etc" },
-            { content: "Disclosure impact" },
-            { content: "Personal navigation strategies" }
-          ]}
-        ]},
-        { content: "Pain", children: [
-          { content: "Relationship with pain", children: [
-            { content: "Perception" },
-            { content: "Tolerance" }
-          ]},
-          { content: "Expressing and Communicating", children: [
-            { content: "Staff empathy and understanding" },
-            { content: "Disclosure impact" },
-            { content: "Personal navigation strategies" }
-          ]}
-        ]},
-        { content: "Final Comments", children: [
-          { content: "Chance to say anything not covered" }
-        ]}
-      ]
-    };
+    function update(depthLimit) {
+      const raw  = document.getElementById("mindmap-data").textContent,
+            data = JSON.parse(raw),
+            root = d3.hierarchy(data);
 
-    // 2) Create markmap instance
-    const options = deriveOptions(rawData);
-    const mm = Markmap.create('#mindmap', options, rawData);
+      // Compute layout
+      tree(root);
 
-    // 3) Prune helper
-    function prune(node, depth) {
-      if (!node.children) return;
-      if (depth <= 1) {
-        delete node.children;
-      } else {
-        node.children.forEach(child => prune(child, depth - 1));
-      }
+      // Filter by depth
+      const nodes = root.descendants().filter(d => d.depth <= depthLimit),
+            links = root.links().filter(d => d.source.depth < depthLimit);
+
+      // Clear & redraw
+      svg.selectAll("*").remove();
+      const g = svg.append("g").attr("transform", "translate(100,25)");
+
+      // Links
+      g.selectAll(".link")
+       .data(links)
+       .enter().append("path")
+         .attr("class", "link")
+         .attr("d", d3.linkHorizontal()
+                        .x(d => d.y)
+                        .y(d => d.x));
+
+      // Nodes
+      const nodeG = g.selectAll(".node")
+                     .data(nodes)
+                     .enter().append("g")
+                       .attr("class", "node")
+                       .attr("transform", d => `translate(${d.y},${d.x})`);
+
+      nodeG.append("circle").attr("r", 3.5);
+      nodeG.append("text")
+           .attr("dy", 3)
+           .attr("x", d => d.children ? -6 : 6)
+           .attr("text-anchor", d => d.children ? "end" : "start")
+           .text(d => d.data.name);
     }
 
-    // 4) Slider logic
-    const slider = document.getElementById('depthSlider');
-    slider.addEventListener('input', () => {
-      const lvl = +slider.value;
-      const clone = JSON.parse(JSON.stringify(rawData));
-      prune(clone, lvl);
-      mm.setData(clone);
-      mm.fit();
-    });
+    // Bind slider
+    document.getElementById("depthSlider")
+            .addEventListener("input", e => update(+e.target.value));
 
-    // 5) Initial render
-    slider.dispatchEvent(new Event('input'));
-
-    // 6) Dark mode support
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.classList.add('markmap-dark');
-    }
-  })();
+    // Initial draw at depth 3
+    update(3);
   </script>
 </body>
 </html>

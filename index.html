@@ -5,40 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Survey Mind Map</title>
   <style>
-    * { margin: 0; padding: 0; }
-    html {
-      font-family: ui-sans-serif, system-ui, sans-serif,
-                   'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji';
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: 100%; }
+    body { height: 100%; font-family: sans-serif; }
+    #slider-container {
+      position: absolute;
+      top: 1em;
+      right: 1em;
+      background: rgba(255,255,255,0.9);
+      padding: 0.5em;
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      z-index: 10;
+      font-size: 0.9rem;
     }
-    body { position: relative; }
     #mindmap {
       display: block;
       width: 100vw;
       height: 100vh;
     }
-    /* Slider container */
-    #slider-container {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: rgba(255,255,255,0.8);
-      padding: 0.5rem 0.75rem;
-      border-radius: 4px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      z-index: 1000;
-    }
-    #slider-container label {
-      font-size: 0.9rem;
-      margin-right: 0.5rem;
-    }
-    /* Markmap dark mode */
     .markmap-dark { background: #27272a; color: #fff; }
   </style>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/style.css">
+  <!-- Markmap core -->
+  <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/browser/index.min.js"></script>
 </head>
 <body>
-
-  <!-- 3-level slider UI -->
+  <!-- Depth slider -->
   <div id="slider-container">
     <label for="depthSlider">Depth:</label>
     <input type="range" id="depthSlider" min="1" max="3" value="3">
@@ -46,159 +38,98 @@
 
   <svg id="mindmap"></svg>
 
-  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/browser/index.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/index.js"></script>
-
   <script>
-  (()=>{
+  (function() {
     const { markmap: mmLib } = window;
     const { Markmap, deriveOptions } = mmLib;
-    const { Toolbar } = window.MarkmapToolbar;
 
-    // 1) Declare your raw tree data once
+    // 1) Your tree data
     const rawData = {
-      "content": "Survey Plan",
-      "children": [
-        {
-          "content":"Demographics",
-          "children":[
-            {"content":"Age Range"},
-            {"content":"Ethnicity Group"},
-            {"content":"Gender Identity"},
-            {"content":"LGBTQ+"},
-            {"content":"Region of the UK"}
-          ]
-        },
-        {
-          "content":"Attendance",
-          "children":[
-            {
-              "content":"Attendance",
-              "children":[
-                {"content":"Reason for this"},
-                {"content":"Previous attendance"},
-                {"content":"Method of attendance, e.g. ambulance"}
-              ]
-            },
-            {
-              "content":"Non-attendance",
-              "children":[
-                {"content":"Reason / Barriers"},
-                {"content":"Perceived Impact and Outcome"}
-              ]
-            },
-            {
-              "content":"Leaving without being seen",
-              "children":[
-                {"content":"Reason / Barriers"},
-                {"content":"Perceived Impact and Outcome"}
-              ]
-            }
-          ]
-        },
-        {
-          "content":"Disclosure",
-          "children":[
-            {
-              "content":"Decision on whether to do so",
-              "children":[{"content":"Factors that are involved"}]
-            },
-            {
-              "content":"Method of doing so",
-              "children":[
-                {"content":"Pre-disclosed (hospital passport, alert on patient records system)"},
-                {"content":"Self-advocacy"}
-              ]
-            },
-            {
-              "content":"Perceived impact of decision",
-              "children":[
-                {"content":"Better or worse due to disclosure"},
-                {"content":"Better or worse due to non-disclosure"}
-              ]
-            }
-          ]
-        },
-        {
-          "content":"Experience",
-          "children":[
-            {
-              "content":"Rating of care and experience",
-              "children":[{"content":"Scales and quantifying"}]
-            },
-            {
-              "content":"Barriers and Enablers",
-              "children":[
-                {"content":"Challenging aspects of the experience"},
-                {"content":"The aspects that help"}
-              ]
-            }
-          ]
-        },
-        {
-          "content":"Key Barriers",
-          "children":[
-            {
-              "content":"Sensory and Environmental",
-              "children":[
-                {"content":"Noise, visual, smell, crowding, etc"},
-                {"content":"Disclosure impact"},
-                {"content":"Personal navigation strategies"}
-              ]
-            },
-            {
-              "content":"Structural and Procedural",
-              "children":[
-                {"content":"Logistics, waiting areas, waiting time, patient pathway, etc"},
-                {"content":"Disclosure impact"},
-                {"content":"Personal navigation strategies"}
-              ]
-            },
-            {
-              "content":"Communication with Staff",
-              "children":[
-                {"content":"Staff empathy, agreement with staff, feeling cared for and understood, etc"},
-                {"content":"Disclosure impact"},
-                {"content":"Personal navigation strategies"}
-              ]
-            }
-          ]
-        },
-        {
-          "content":"Pain",
-          "children":[
-            {
-              "content":"Relationship with pain",
-              "children":[{"content":"Perception"},{"content":"Tolerance"}]
-            },
-            {
-              "content":"Expressing and Communicating",
-              "children":[
-                {"content":"Staff empathy and understanding"},
-                {"content":"Disclosure impact"},
-                {"content":"Personal navigation strategies"}
-              ]
-            }
-          ]
-        },
-        {
-          "content":"Final Comments",
-          "children":[{"content":"Chance to say anything not covered"}]
-        }
+      content: "Survey Organisation",
+      children: [
+        { content: "Demographics", children: [
+          { content: "Age Range" },
+          { content: "Ethnicity Group" },
+          { content: "Gender Identity" },
+          { content: "LGBTQ+" },
+          { content: "Region of the UK" }
+        ]},
+        { content: "Attendance", children: [
+          { content: "Attendance", children: [
+            { content: "Reason for this" },
+            { content: "Previous attendance" },
+            { content: "Method of attendance, e.g. ambulance" }
+          ]},
+          { content: "Non-attendance", children: [
+            { content: "Reason / Barriers" },
+            { content: "Perceived Impact and Outcome" }
+          ]},
+          { content: "Leaving without being seen", children: [
+            { content: "Reason / Barriers" },
+            { content: "Perceived Impact and Outcome" }
+          ]}
+        ]},
+        { content: "Disclosure", children: [
+          { content: "Decision on whether to do so", children: [
+            { content: "Factors that are involved" }
+          ]},
+          { content: "Method of doing so", children: [
+            { content: "Pre-disclosed (hospital passport, alert on patient records system)" },
+            { content: "Self-advocacy" }
+          ]},
+          { content: "Perceived impact of decision", children: [
+            { content: "Better or worse due to disclosure" },
+            { content: "Better or worse due to non-disclosure" }
+          ]}
+        ]},
+        { content: "Experience", children: [
+          { content: "Rating of care and experience", children: [
+            { content: "Scales and quantifying" }
+          ]},
+          { content: "Barriers and Enablers", children: [
+            { content: "Challenging aspects of the experience" },
+            { content: "The aspects that help" }
+          ]}
+        ]},
+        { content: "Key Barriers", children: [
+          { content: "Sensory and Environmental", children: [
+            { content: "Noise, visual, smell, crowding, etc" },
+            { content: "Disclosure impact" },
+            { content: "Personal navigation strategies" }
+          ]},
+          { content: "Structural and Procedural", children: [
+            { content: "Logistics, waiting areas, waiting time, patient pathway, etc" },
+            { content: "Disclosure impact" },
+            { content: "Personal navigation strategies" }
+          ]},
+          { content: "Communication with Staff", children: [
+            { content: "Staff empathy, agreement with staff, feeling cared for and understood, etc" },
+            { content: "Disclosure impact" },
+            { content: "Personal navigation strategies" }
+          ]}
+        ]},
+        { content: "Pain", children: [
+          { content: "Relationship with pain", children: [
+            { content: "Perception" },
+            { content: "Tolerance" }
+          ]},
+          { content: "Expressing and Communicating", children: [
+            { content: "Staff empathy and understanding" },
+            { content: "Disclosure impact" },
+            { content: "Personal navigation strategies" }
+          ]}
+        ]},
+        { content: "Final Comments", children: [
+          { content: "Chance to say anything not covered" }
+        ]}
       ]
     };
 
-    // 2) Create the markmap instance
+    // 2) Create markmap instance
     const options = deriveOptions(rawData);
-    const mm = Markmap.create('svg#mindmap', options, rawData);
-    window.mm = mm;
+    const mm = Markmap.create('#mindmap', options, rawData);
 
-    // 3) Attach toolbar
-    const toolbar = new Toolbar();
-    toolbar.attach(mm);
-
-    // 4) Prune helper: remove children beyond `depth`
+    // 3) Prune helper
     function prune(node, depth) {
       if (!node.children) return;
       if (depth <= 1) {
@@ -208,27 +139,24 @@
       }
     }
 
-    // 5) Slider logic
+    // 4) Slider logic
     const slider = document.getElementById('depthSlider');
     slider.addEventListener('input', () => {
-      const level = +slider.value;
-      // deep‐clone and prune
-      const dataClone = JSON.parse(JSON.stringify(rawData));
-      prune(dataClone, level);
-      mm.setData(dataClone);
+      const lvl = +slider.value;
+      const clone = JSON.parse(JSON.stringify(rawData));
+      prune(clone, lvl);
+      mm.setData(clone);
       mm.fit();
     });
 
-    // 6) Initial render at depth 3
+    // 5) Initial render
     slider.dispatchEvent(new Event('input'));
-  })();
-  </script>
 
-  <script>
-    // Dark‐mode based on user preference
+    // 6) Dark mode support
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.documentElement.classList.add('markmap-dark');
     }
+  })();
   </script>
 </body>
 </html>

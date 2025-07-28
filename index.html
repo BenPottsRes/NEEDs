@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Survey Mind Map</title>
+  <!-- 1) Include D3 first -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: sans-serif; }
-    h1 { text-align: center; margin: 0.5em 0; }
+    h1 { text-align: center; margin: 1em 0 0.5em; }
     #slider-container { text-align: center; margin-bottom: 0.5em; }
     #svg-wrapper { overflow-x: auto; }
     svg { display: block; margin: auto; }
@@ -28,7 +29,7 @@
     <svg width="1400" height="700"></svg>
   </div>
 
-  <!-- Inline JSON data -->
+  <!-- 2) Inline your JSON mind-map data -->
   <script id="mindmap-data" type="application/json">
 {
   "name": "Survey Organisation",
@@ -172,38 +173,32 @@
 }
   </script>
 
+  <!-- 3) D3 rendering + slider logic -->
   <script>
     const svg    = d3.select("svg"),
           width  = +svg.attr("width"),
           height = +svg.attr("height"),
-          tree   = d3.tree().size([height - 50, width - 200]);  // leave margins
+          tree   = d3.tree().size([height - 50, width - 200]);
 
     function update(depthLimit) {
       const raw  = document.getElementById("mindmap-data").textContent,
             data = JSON.parse(raw),
             root = d3.hierarchy(data);
 
-      // Compute layout
-      tree(root);
+      tree(root);  // compute x/y positions
 
-      // Filter by depth
       const nodes = root.descendants().filter(d => d.depth <= depthLimit),
             links = root.links().filter(d => d.source.depth < depthLimit);
 
-      // Clear & redraw
       svg.selectAll("*").remove();
       const g = svg.append("g").attr("transform", "translate(100,25)");
 
-      // Links
       g.selectAll(".link")
        .data(links)
        .enter().append("path")
          .attr("class", "link")
-         .attr("d", d3.linkHorizontal()
-                        .x(d => d.y)
-                        .y(d => d.x));
+         .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
 
-      // Nodes
       const nodeG = g.selectAll(".node")
                      .data(nodes)
                      .enter().append("g")
@@ -218,11 +213,9 @@
            .text(d => d.data.name);
     }
 
-    // Bind slider
     document.getElementById("depthSlider")
             .addEventListener("input", e => update(+e.target.value));
 
-    // Initial draw at depth 3
     update(3);
   </script>
 </body>

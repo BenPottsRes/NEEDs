@@ -4,12 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-  <title>Markmap</title>
+  <title>Markmap with Slider</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-    }
+    * { margin: 0; padding: 0; }
     html {
       font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
@@ -24,32 +21,35 @@
       color: white;
     }
   </style>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/style.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/style.css">
 </head>
 <body>
 
-  <!-- 1) SLIDER HTML: drop this *above* your <svg> -->
+  <!-- 1) Slider UI -->
   <div id="slider-container" style="
-      position:absolute;
-      top:1rem; right:1rem;
-      background:rgba(255,255,255,0.8);
-      padding:0.5rem 0.75rem;
-      border-radius:4px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.2);
-      z-index:1000;
+      position: absolute;
+      top: 1rem; right: 1rem;
+      background: rgba(255,255,255,0.8);
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      z-index: 1000;
     ">
     <label for="depthSlider">Depth:</label>
     <input type="range" id="depthSlider" min="1" max="3" value="3">
   </div>
 
+  <!-- 2) Mindmap container -->
   <svg id="mindmap"></svg>
 
+  <!-- 3) Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/browser/index.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/index.js"></script>
 
   <script>
-    // --- existing toolbar init ---
+    // Toolbar initialisation (unchanged)
     (r => { setTimeout(r); })(function renderToolbar() {
       const { markmap, mm } = window;
       const { el } = markmap.Toolbar.create(mm);
@@ -57,21 +57,23 @@
       document.body.append(el);
     });
 
-    // --- existing markmap init + SLIDER LOGIC ---
-    ((getMarkmap, getOptions, root2, jsonOptions) => {
+    // Mindmap + Slider logic
+    ((getMarkmap, getOptions, root2) => {
       const markmap = getMarkmap();
+      // Create the map
       window.mm = markmap.Markmap.create(
         'svg#mindmap',
-        (getOptions || markmap.deriveOptions)(jsonOptions),
+        (getOptions || markmap.deriveOptions)(root2),
         root2
       );
+      // Dark‐mode support
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.classList.add('markmap-dark');
       }
 
-      // ---- SLIDER LOGIC START ----
+      // ---- Slider logic start ----
 
-      // Prune helper: cut children beyond `depth`
+      // Prune helper: limits tree to `depth` levels
       function prune(node, depth) {
         if (!node.children) return;
         if (depth <= 1) {
@@ -85,36 +87,164 @@
       const slider = document.getElementById('depthSlider');
       slider.addEventListener('input', () => {
         const lvl = +slider.value;
-        // Deep-clone the original data (root2)
+        // Deep clone your original data
         const clone = JSON.parse(JSON.stringify(root2));
         prune(clone, lvl);
         window.mm.setData(clone);
         window.mm.fit();
       });
 
-      // Trigger the initial render at slider’s default
+      // Initial render at slider's default value
       slider.dispatchEvent(new Event('input'));
 
-      // ---- SLIDER LOGIC END ----
+      // ---- Slider logic end ----
 
     })(
-      // IIFE arguments: getMarkmap, getOptions, root2, jsonOptions
-      () => window.markmap,
-      null,
-      /* <-- paste your original root2 JSON object here, for example: */
-      {
-        "content":"Survey Planning",
-        "children":[
-          {"content":"Demographics","children":[
-             {"content":"Age Range"}, {"content":"Ethnicity Group"}, /* … */]},
-          {"content":"Attendance","children":[ /* … */]},
-          /* …rest of your tree… */
+      // IIFE arguments:
+      () => window.markmap,         // getMarkmap
+      null,                         // getOptions → will use deriveOptions
+      /* === Paste your full JSON tree here === */
+    {
+  "name": "Survey Organisation",
+  "children": [
+    {
+      "name": "Demographics",
+      "children": [
+        { "name": "Age Range" },
+        { "name": "Ethnicity Group" },
+        { "name": "Gender Identity" },
+        { "name": "LGBTQ+" },
+        { "name": "Region of the UK" }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "children": [
+        {
+          "name": "Attendance",
+          "children": [
+            { "name": "Reason for this" },
+            { "name": "Previous attendance" },
+            { "name": "Method of attendance, e.g. ambulance" }
+          ]
+        },
+        {
+          "name": "Non-attendance",
+          "children": [
+            { "name": "Reason / Barriers" },
+            { "name": "Perceived Impact and Outcome" }
+          ]
+        },
+        {
+          "name": "Leaving without being seen",
+          "children": [
+            { "name": "Reason / Barriers" },
+            { "name": "Perceived Impact and Outcome" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Disclosure",
+      "children": [
+        {
+          "name": "Decision on whether to do so",
+          "children": [
+            { "name": "Factors that are involved" }
+          ]
+        },
+        {
+          "name": "Method of doing so",
+          "children": [
+            { "name": "Pre-disclosed (hospital passport, alert on patient records system)" },
+            { "name": "Self-advocacy" }
+          ]
+        },
+        {
+          "name": "Perceived impact of decision",
+          "children": [
+            { "name": "Better or worse due to disclosure" },
+            { "name": "Better or worse due to non-disclosure" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Experience",
+      "children": [
+        {
+          "name": "Rating of care and experience",
+          "children": [
+            { "name": "Scales and quantifying" }
+          ]
+        },
+        {
+          "name": "Barriers and Enablers",
+          "children": [
+            { "name": "Challenging aspects of the experience" },
+            { "name": "The aspects that help" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Key Barriers",
+      "children": [
+        {
+          "name": "Sensory and Environmental",
+          "children": [
+            { "name": "Noise, visual, smell, crowding, etc" },
+            { "name": "Disclosure impact" },
+            { "name": "Personal navigation strategies" }
+          ]
+        },
+        {
+          "name": "Structural and Procedural",
+          "children": [
+            { "name": "Logistics, waiting areas, waiting time, patient pathway, etc" },
+            { "name": "Disclosure impact" },
+            { "name": "Personal navigation strategies" }
+          ]
+        },
+        {
+          "name": "Communication with Staff",
+          "children": [
+            { "name": "Staff empathy, agreement with staff, feeling cared for and understood, etc" },
+            { "name": "Disclosure impact" },
+            { "name": "Personal navigation strategies" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pain",
+      "children": [
+        {
+          "name": "Relationship with pain",
+          "children": [
+            { "name": "Perception" },
+            { "name": "Tolerance" }
+          ]
+        },
+        {
+          "name": "Expressing and Communicating",
+          "children": [
+            { "name": "Staff empathy and understanding" },
+            { "name": "Disclosure impact" },
+            { "name": "Personal navigation strategies" }
+          ]
+        }
+      ]
+    },
+    {
+        "name": "Final Comments",
+        "children": [
+          { "name": "Chance to say anything not covered" }
         ]
-      },
-      /* jsonOptions (can be same as root2 or {} if you used deriveOptions) */
-      {}
-    );
-
+      }
+    ]
+  }
+);
   </script>
 </body>
 </html>

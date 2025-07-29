@@ -56,7 +56,7 @@
   <!-- Depth slider -->
   <div id="slider-container">
     <label for="depthSlider">Levels:</label>
-    <input type="range" id="depthSlider" min="1" max="4" value="1">
+    <input type="range" id="depthSlider" min="1" max="5" value="1">
   </div>
 
   <!-- Scrollable SVG container -->
@@ -256,7 +256,7 @@
             .addEventListener("input", e => update(+e.target.value));
 
     // initial render at 3 levels
-    update(1);
+    update(4);
   </script>
 </body>
 </html>

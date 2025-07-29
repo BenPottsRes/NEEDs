@@ -56,18 +56,18 @@
   <!-- Depth slider -->
   <div id="slider-container">
     <label for="depthSlider">Levels:</label>
-    <input type="range" id="depthSlider" min="1" max="3" value="3">
+    <input type="range" id="depthSlider" min="1" max="4" value="1">
   </div>
 
   <!-- Scrollable SVG container -->
   <div id="svg-wrapper">
-    <svg width="1400" height="600"></svg>
+    <svg width="2000" height="600"></svg>
   </div>
 
   <!-- Inline JSON mind-map data -->
   <script id="mindmap-data" type="application/json">
 {
-  "name": "Survey Organisation",
+  "name": "Survey Plan",
   "children": [
     {
       "name": "Demographics",
@@ -256,7 +256,7 @@
             .addEventListener("input", e => update(+e.target.value));
 
     // initial render at 3 levels
-    update(3);
+    update(1);
   </script>
 </body>
 </html>

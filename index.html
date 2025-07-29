@@ -1,33 +1,20 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Markmap with Slider</title>
   <style>
     * { margin: 0; padding: 0; }
     html {
-      font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+      font-family: ui-sans-serif, system-ui, sans-serif,
+                   'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji';
     }
-    #mindmap {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-    }
-    .markmap-dark {
-      background: #27272a;
-      color: white;
-    }
-  </style>
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/style.css">
-</head>
-<body>
-
-  <!-- 1) Slider UI -->
-  <div id="slider-container" style="
+    body { position: relative; }
+    #mindmap { display: block; width: 100vw; height: 100vh; }
+    .markmap-dark { background: #27272a; color: white; }
+    /* slider container */
+    #slider-container {
       position: absolute;
       top: 1rem; right: 1rem;
       background: rgba(255,255,255,0.8);
@@ -35,7 +22,15 @@
       border-radius: 4px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       z-index: 1000;
-    ">
+    }
+    #slider-container label { margin-right: 0.5rem; font-size: 0.9rem; }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/style.css">
+</head>
+<body>
+
+  <!-- 1) Slider UI -->
+  <div id="slider-container">
     <label for="depthSlider">Depth:</label>
     <input type="range" id="depthSlider" min="1" max="3" value="3">
   </div>
@@ -49,7 +44,7 @@
   <script src="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/index.js"></script>
 
   <script>
-    // Toolbar initialisation (unchanged)
+    // Toolbar initialisation
     (r => { setTimeout(r); })(function renderToolbar() {
       const { markmap, mm } = window;
       const { el } = markmap.Toolbar.create(mm);
@@ -60,20 +55,17 @@
     // Mindmap + Slider logic
     ((getMarkmap, getOptions, root2) => {
       const markmap = getMarkmap();
-      // Create the map
       window.mm = markmap.Markmap.create(
         'svg#mindmap',
         (getOptions || markmap.deriveOptions)(root2),
         root2
       );
-      // Dark‐mode support
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.classList.add('markmap-dark');
       }
 
       // ---- Slider logic start ----
 
-      // Prune helper: limits tree to `depth` levels
       function prune(node, depth) {
         if (!node.children) return;
         if (depth <= 1) {
@@ -83,171 +75,106 @@
         }
       }
 
-      // Bind the slider
       const slider = document.getElementById('depthSlider');
       slider.addEventListener('input', () => {
         const lvl = +slider.value;
-        // Deep clone your original data
         const clone = JSON.parse(JSON.stringify(root2));
         prune(clone, lvl);
         window.mm.setData(clone);
         window.mm.fit();
       });
-
-      // Initial render at slider's default value
       slider.dispatchEvent(new Event('input'));
 
       // ---- Slider logic end ----
 
     })(
-      // IIFE arguments:
-      () => window.markmap,         // getMarkmap
-      null,                         // getOptions → will use deriveOptions
-      /* === Paste your full JSON tree here === */
-{
-  "name": "Survey Organisation",
-  "children": [
-    {
-      "name": "Demographics",
-      "children": [
-        { "name": "Age Range" },
-        { "name": "Ethnicity Group" },
-        { "name": "Gender Identity" },
-        { "name": "LGBTQ+" },
-        { "name": "Region of the UK" }
-      ]
-    },
-    {
-      "name": "Attendance",
-      "children": [
-        {
-          "name": "Attendance",
-          "children": [
-            { "name": "Reason for this" },
-            { "name": "Previous attendance" },
-            { "name": "Method of attendance, e.g. ambulance" }
-          ]
-        },
-        {
-          "name": "Non-attendance",
-          "children": [
-            { "name": "Reason / Barriers" },
-            { "name": "Perceived Impact and Outcome" }
-          ]
-        },
-        {
-          "name": "Leaving without being seen",
-          "children": [
-            { "name": "Reason / Barriers" },
-            { "name": "Perceived Impact and Outcome" }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Disclosure",
-      "children": [
-        {
-          "name": "Decision on whether to do so",
-          "children": [
-            { "name": "Factors that are involved" }
-          ]
-        },
-        {
-          "name": "Method of doing so",
-          "children": [
-            { "name": "Pre-disclosed (hospital passport, alert on patient records system)" },
-            { "name": "Self-advocacy" }
-          ]
-        },
-        {
-          "name": "Perceived impact of decision",
-          "children": [
-            { "name": "Better or worse due to disclosure" },
-            { "name": "Better or worse due to non-disclosure" }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Experience",
-      "children": [
-        {
-          "name": "Rating of care and experience",
-          "children": [
-            { "name": "Scales and quantifying" }
-          ]
-        },
-        {
-          "name": "Barriers and Enablers",
-          "children": [
-            { "name": "Challenging aspects of the experience" },
-            { "name": "The aspects that help" }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Key Barriers",
-      "children": [
-        {
-          "name": "Sensory and Environmental",
-          "children": [
-            { "name": "Noise, visual, smell, crowding, etc" },
-            { "name": "Disclosure impact" },
-            { "name": "Personal navigation strategies" }
-          ]
-        },
-        {
-          "name": "Structural and Procedural",
-          "children": [
-            { "name": "Logistics, waiting areas, waiting time, patient pathway, etc" },
-            { "name": "Disclosure impact" },
-            { "name": "Personal navigation strategies" }
-          ]
-        },
-        {
-          "name": "Communication with Staff",
-          "children": [
-            { "name": "Staff empathy, agreement with staff, feeling cared for and understood, etc" },
-            { "name": "Disclosure impact" },
-            { "name": "Personal navigation strategies" }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Pain",
-      "children": [
-        {
-          "name": "Relationship with pain",
-          "children": [
-            { "name": "Perception" },
-            { "name": "Tolerance" }
-          ]
-        },
-        {
-          "name": "Expressing and Communicating",
-          "children": [
-            { "name": "Staff empathy and understanding" },
-            { "name": "Disclosure impact" },
-            { "name": "Personal navigation strategies" }
-          ]
-        }
-      ]
-    },
+      () => window.markmap,
+      null,
       {
-        "name": "Final Comments",
-        "children": [
-          { "name": "Chance to say anything not covered" }
-        ]
+        "content":"Survey Planning",
+        "children":[
+          {"content":"Demographics","children":[
+            {"content":"\n<p data-lines=\"5,6\">Demographics</p>","children":[
+              {"content":"\n<p data-lines=\"7,8\">Age Range</p>","children":[],"payload":{"tag":"li","lines":"7,9"}},
+              {"content":"\n<p data-lines=\"9,10\">Ethnicity Group</p>","children":[],"payload":{"tag":"li","lines":"9,11"}},
+              {"content":"\n<p data-lines=\"11,12\">Gender Identity</p>","children":[],"payload":{"tag":"li","lines":"11,13"}},
+              {"content":"\n<p data-lines=\"13,14\">LGBTQ+</p>","children":[],"payload":{"tag":"li","lines":"13,15"}},
+              {"content":"\n<p data-lines=\"15,16\">Region of the UK</p>","children":[],"payload":{"tag":"li","lines":"15,19"}}
+            ],"payload":{"tag":"li","lines":"5,19"}}
+          ],"payload":{"tag":"h2","lines":"3,4"}},
+          {"content":"Attendance","children":[
+            {"content":"\n<p data-lines=\"21,22\">Attendance</p>","children":[
+              {"content":"\n<p data-lines=\"23,24\">Reason for this</p>","children":[],"payload":{"tag":"li","lines":"23,25"}},
+              {"content":"\n<p data-lines=\"25,26\">Previous attendance</p>","children":[],"payload":{"tag":"li","lines":"25,27"}},
+              {"content":"\n<p data-lines=\"27,28\">Method of attendance, e.g. ambulance, via 111</p>","children":[],"payload":{"tag":"li","lines":"27,29"}}
+            ],"payload":{"tag":"li","lines":"21,29"}},
+            {"content":"\n<p data-lines=\"29,30\">Non-attendance</p>","children":[
+              {"content":"\n<p data-lines=\"31,32\">Reasons &amp; Barriers</p>","children":[],"payload":{"tag":"li","lines":"31,33"}},
+              {"content":"\n<p data-lines=\"33,34\">Perceived Impact and Outcome</p>","children":[],"payload":{"tag":"li","lines":"33,35"}}
+            ],"payload":{"tag":"li","lines":"29,35"}},
+            {"content":"\n<p data-lines=\"35,36\">Leaving without being seen</p>","children":[
+              {"content":"\n<p data-lines=\"37,38\">Reason &amp; Barriers</p>","children":[],"payload":{"tag":"li","lines":"37,39"}},
+              {"content":"\n<p data-lines=\"39,40\">Perceived Impact and Outcome</p>","children":[],"payload":{"tag":"li","lines":"39,43"}}
+            ],"payload":{"tag":"li","lines":"35,43"}}
+          ],"payload":{"tag":"h2","lines":"19,20"}},
+          {"content":"Disclosure","children":[
+            {"content":"\n<p data-lines=\"45,46\">Decision on whether to do so</p>","children":[
+              {"content":"Factors that are involved","children":[],"payload":{"tag":"li","lines":"47,49"}}
+            ],"payload":{"tag":"li","lines":"45,49"}},
+            {"content":"\n<p data-lines=\"49,50\">Method of doing so</p>","children":[
+              {"content":"\n<p data-lines=\"51,52\">Pre-disclosed (hospital passport, alert on patient records system)</p>","children":[],"payload":{"tag":"li","lines":"51,53"}},
+              {"content":"\n<p data-lines=\"53,54\">Self-advocacy</p>","children":[],"payload":{"tag":"li","lines":"53,55"}}
+            ],"payload":{"tag":"li","lines":"49,55"}},
+            {"content":"\n<p data-lines=\"55,56\">Perceived impact of decision</p>","children":[
+              {"content":"\n<p data-lines=\"57,58\">Better or worse due to disclosure</p>","children":[],"payload":{"tag":"li","lines":"57,59"}},
+              {"content":"\n<p data-lines=\"59,60\">Better or worse due to non-disclosure</p>","children":[],"payload":{"tag":"li","lines":"59,63"}}
+            ],"payload":{"tag":"li","lines":"55,63"}}
+          ],"payload":{"tag":"h2","lines":"43,44"}},
+          {"content":"Experience","children":[
+            {"content":"\n<p data-lines=\"65,66\">Rating of care and experience</p>","children":[
+              {"content":"Scales and quantifying","children":[],"payload":{"tag":"li","lines":"67,69"}}
+            ],"payload":{"tag":"li","lines":"65,69"}},
+            {"content":"\n<p data-lines=\"69,70\">Barriers and Enablers</p>","children":[
+              {"content":"\n<p data-lines=\"71,72\">Challenging aspects of the experience</p>","children":[],"payload":{"tag":"li","lines":"71,73"}},
+              {"content":"\n<p data-lines=\"73,74\">The aspects that help</p>","children":[],"payload":{"tag":"li","lines":"73,77"}}
+            ],"payload":{"tag":"li","lines":"69,77"}}
+          ],"payload\":{\"tag\":\"h2\",\"lines\":\"63,64\"}},  
+          {"content":"Key Barriers","children":[
+            {"content":"\n<p data-lines=\"79,80\">Sensory and Environmental</p>","children":[
+              {"content":"\n<p data-lines=\"81,82\">Noise, visual, smell, crowding, etc</p>","children":[],"payload":{"tag":"li","lines":"81,83"}},
+              {"content":"\n<p data-lines=\"83,84\">Disclosure impact</p>","children":[],"payload":{"tag":"li","lines":"83,85"}},
+              {"content":"\n<p data-lines=\"85,86\">Personal navigation strategies</p>","children":[],"payload":{"tag":"li","lines":"85,87"}}
+            ],"payload":{"tag":"li","lines":"79,87"}},
+            {"content":"\n<p data-lines=\"87,88\">Structural and Procedural</p>","children":[
+              {"content":"\n<p data-lines=\"89,90\">Logistics, waiting areas, waiting time, patient pathway, etc</p>","children":[],"payload":{"tag":"li","lines":"89,91"}},
+              {"content":"\n<p data-lines=\"91,92\">Disclosure impact</p>","children":[],"payload":{"tag":"li","lines":"91,93"}},
+              {"content":"\n<p data-lines=\"93,94\">Personal navigation strategies</p>","children":[],"payload":{"tag":"li","lines":"93,95"}}
+            ],"payload":{"tag":"li","lines":"87,95"}},
+            {"content":"\n<p data-lines=\"95,96\">Communication with Staff</p>","children":[
+              {"content":"\n<p data-lines=\"97,98\">Staff empathy, agreement with staff, feeling cared for and understood, etc</p>","children":[],"payload":{"tag":"li","lines":"97,99"}},
+              {"content":"\n<p data-lines=\"99,100\">Disclosure impact</p>","children":[],"payload":{"tag":"li","lines":"99,101"}},
+              {"content":"\n<p data-lines=\"101,102\">Personal navigation strategies</p>","children":[],"payload":{"tag":"li","lines":"101,105"}}
+            ],"payload":{"tag":"li","lines":"95,105"}}
+          ],"payload":{"tag":"h2","lines":"77,78"}},
+          {"content":"Pain","children":[
+            {"content":"\n<p data-lines=\"107,108\">Relationship with pain</p>","children":[
+              {"content":"\n<p data-lines=\"109,110\">Perception</p>","children":[],"payload":{"tag":"li","lines":"109,111"}},
+              {"content":"\n<p data-lines=\"111,112\">Tolerance</p>","children":[],"payload":{"tag":"li","lines":"111,113"}}
+            ],"payload":{"tag":"li","lines":"107,113"}},
+            {"content":"\n<p data-lines=\"113,114\">Expressing and Communicating</p>","children":[
+              {"content":"\n<p data-lines=\"115,116\">Staff empathy and understanding</p>","children":[],"payload":{"tag":"li","lines":"115,117"}},
+              {"content":"\n<p data-lines=\"117,118\">Disclosure impact</p>","children":[],"payload":{"tag":"li","lines":"117,119"}},
+              {"content":"\n<p data-lines=\"119,120\">Personal navigation strategies</p>","children":[],"payload":{"tag":"li","lines":"119,123"}}
+            ],"payload":{"tag":"li","lines":"113,123"}}
+          ],"payload":{"tag":"h2","lines":"105,106"}},
+          {"content":"Final Comments","children":[
+            {"content":"Chance to say anything not covered","children":[],"payload":{"tag":"li","lines":"125,126"}}
+          ],"payload":{"tag":"h2","lines":"123,124"}}
+        ],
+        "payload":{"tag":"h1","lines":"0,1"}
       }
-    ]
-  }
-);
-  </script>
-</body>
-</html>
+    );
+
   </script>
 </body>
 </html>

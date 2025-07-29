@@ -41,7 +41,7 @@
     .node circle {
       fill: #69b3a2;
       stroke: #4a7c6b;
-      stroke-width: 1px;
+      stroke-width: 3px;
     }
     .node text {
       font: 12px sans-serif;
@@ -212,7 +212,7 @@
     const svg    = d3.select("svg"),
           width  = +svg.attr("width"),
           height = +svg.attr("height"),
-          tree   = d3.tree().size([height - 40, width - 200]);
+          tree   = d3.tree().size([height - 40, width - 100]);
 
     function update(depthLimit) {
       const raw  = document.getElementById("mindmap-data").textContent,
